@@ -1,0 +1,83 @@
+#include <LiquidCrystal.h>
+#include <DHT.h>
+
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+#define DHTPIN 7
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+
+unsigned long lastSensorUpdate = 0;
+const int sensorInterval = 1500;
+
+String title = "  DFJ's Weather Station  ";
+int titleIndex = 0;
+
+String getComfort(float t, float h) {
+  if (t>30) return "HOT";
+  if (t > 25 && t <= 30) return "WARM";
+  if (t >= 20 && t <= 25) return "IDEAL";
+  if (t >= 10 && t < 20) return "CHILLY";
+  if (t >= 1 && t < 10) return "COLD";
+  if (t <= 0) return "BRRRRRR"; 
+  return "CODE ER";
+}
+
+float t = 0;
+float h = 0;
+String comfort = "----";
+
+void setup() {
+  lcd.begin(16, 2);
+  dht.begin();
+
+  lcd.print("Kesar Weather");
+  lcd.setCursor(0, 1);
+  lcd.print("Station Start");
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+
+  // SENSOR UPDATE
+  if (millis() - lastSensorUpdate >= sensorInterval) {
+    lastSensorUpdate = millis();
+
+    float newH = dht.readHumidity();
+    float newT = dht.readTemperature();
+
+    if (!isnan(newH) && !isnan(newT)) {
+      h = newH;
+      t = newT;
+      comfort = getComfort(t, h);
+    } else {
+      comfort = "ERROR";
+    }
+  }
+
+  // TOP LINE SCROLL
+  String topDisplay = title.substring(titleIndex, titleIndex + 16);
+
+  lcd.setCursor(0, 0);
+  lcd.print(topDisplay);
+
+  titleIndex++;
+  if (titleIndex > title.length() - 16) titleIndex = 0;
+
+  // BOTTOM LINE (FIXED STABLE DISPLAY)
+  lcd.setCursor(0, 1);
+  lcd.print("                "); // clear line
+
+  lcd.setCursor(0, 1);
+  lcd.print(round(t));
+  lcd.write(byte(223)); // This is the degree symbol, should work for most 16x2 LCD's if it doesn't its just one quick google search away for the actual byte #
+  lcd.print("C ");
+  lcd.print(round(h));
+  lcd.print("% ");
+
+  lcd.print(comfort);
+
+  delay(500);
+}
