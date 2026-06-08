@@ -4,7 +4,7 @@
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 #define DHTPIN 7
-#define DHTTYPE DHT11
+#define DHTTYPE DHT11 // Change to 22 if you're using DHT22
 
 DHT dht(DHTPIN, DHTTYPE);
 
